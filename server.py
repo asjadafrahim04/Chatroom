@@ -29,7 +29,7 @@ def handle_client(client_socket):
     global group_password, admin_exists
     
     try:
-        # Step 1: Ask for role
+        #Ask for role
         client_socket.send("ASK_ROLE".encode())
         role = client_socket.recv(1024).decode().strip()
         print(f"Role received: {role}")

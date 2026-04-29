@@ -176,19 +176,19 @@ class ChatClient:
         btn_frame = tk.Frame(right_frame, bg='#2c3e50')
         btn_frame.pack(fill=tk.X, pady=5)
         
-        private_button = tk.Button(btn_frame, text="💬 PRIVATE MSG", command=self.private_msg, 
+        private_button = tk.Button(btn_frame, text="PRIVATE MSG", command=self.private_msg, 
                                    bg='#e67e22', fg='white')
         private_button.pack(side=tk.LEFT, padx=5)
         
-        leave_button = tk.Button(btn_frame, text="🚪 LEAVE", command=self.leave_group, 
+        leave_button = tk.Button(btn_frame, text="LEAVE", command=self.leave_group, 
                                  bg='#e74c3c', fg='white')
         leave_button.pack(side=tk.LEFT, padx=5)
         
-        exit_button = tk.Button(btn_frame, text="❌ EXIT", command=self.exit_chat, 
+        exit_button = tk.Button(btn_frame, text="EXIT", command=self.exit_chat, 
                                 bg='#95a5a6', fg='white')
         exit_button.pack(side=tk.RIGHT, padx=5)
         
-        kick_button = tk.Button(btn_frame, text="👢 KICK", command=self.kick_user, 
+        kick_button = tk.Button(btn_frame, text="KICK", command=self.kick_user, 
                                 bg='#c0392b', fg='white')
         kick_button.pack(side=tk.LEFT, padx=5)
         
@@ -202,7 +202,7 @@ class ChatClient:
                 # Send message to server
                 self.socket.send(msg.encode())
                 
-                # Display message locally (so sender can see it immediately)
+                # Display message locally 
                 from datetime import datetime
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 self.add_message("YOU", msg)
