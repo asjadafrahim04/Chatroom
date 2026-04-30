@@ -76,6 +76,7 @@ class ChatClient:
                     self.socket.send(role.encode())
                     
                     if role == "ADMIN":
+                        self.is_admin = True
                         # Receive SET_PASSWORD
                         response2 = self.socket.recv(1024).decode()
                         if response2 == "SET_PASSWORD":
@@ -92,6 +93,7 @@ class ChatClient:
                                 self.socket.close()
                                 
                     elif role == "USER":
+                        self.is_admin = False
                         # Receive ASK_PASSWORD
                         response2 = self.socket.recv(1024).decode()
                         if response2 == "ASK_PASSWORD":
@@ -188,12 +190,16 @@ class ChatClient:
                                 bg='#95a5a6', fg='white')
         exit_button.pack(side=tk.RIGHT, padx=5)
         
-        kick_button = tk.Button(btn_frame, text="KICK", command=self.kick_user, 
-                                bg='#c0392b', fg='white')
-        kick_button.pack(side=tk.LEFT, padx=5)
+        # Only show kick button for admin
+        if self.is_admin:
+            kick_button = tk.Button(btn_frame, text="KICK", command=self.kick_user, 
+                                    bg='#c0392b', fg='white')
+            kick_button.pack(side=tk.LEFT, padx=5)
         
         self.window.title(f"💬 CHATROOM - {self.username}")
         self.add_message("SYSTEM", f"Welcome to the chatroom! You are logged in as {self.username}")
+        if self.is_admin:
+            self.add_message("SYSTEM", "You are the ADMIN. You can kick users.")
     
     def send_message(self):
         msg = self.msg_entry.get().strip()
@@ -233,6 +239,10 @@ class ChatClient:
             messagebox.showinfo("Info", "Select a user from the list first!")
     
     def kick_user(self):
+        if not self.is_admin:
+            messagebox.showerror("Error", "Only admin can kick users!")
+            return
+            
         selected = self.users_listbox.curselection()
         if selected:
             target = self.users_listbox.get(selected[0])
@@ -292,6 +302,8 @@ class ChatClient:
                         self.running = False
                         self.window.destroy()
                         break
+                    elif msg.startswith("ERROR:"):
+                        messagebox.showerror("Error", msg[6:])
                     else:
                         # Regular chat message from others (format: "username: message")
                         self.add_message("💬", msg)

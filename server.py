@@ -6,6 +6,7 @@ PORT = 12345
 
 clients = []
 usernames = []
+client_roles = []  # Track roles for each client
 group_password = None
 admin_exists = False
 
@@ -29,7 +30,7 @@ def handle_client(client_socket):
     global group_password, admin_exists
     
     try:
-        #Ask for role
+        # Ask for role
         client_socket.send("ASK_ROLE".encode())
         role = client_socket.recv(1024).decode().strip()
         print(f"Role received: {role}")
@@ -56,6 +57,7 @@ def handle_client(client_socket):
             
             clients.append(client_socket)
             usernames.append(username)
+            client_roles.append("ADMIN")
             
             client_socket.send("SUCCESS".encode())
             broadcast(f"SYSTEM: Admin {username} joined the chat!", client_socket)
@@ -78,16 +80,34 @@ def handle_client(client_socket):
                                 client_socket.send(f"PRIVATE to {target}: {msg}".encode())
                                 break
                 elif message.startswith("KICK:"):
-                    target = message.split(":", 1)[1]
-                    for i, name in enumerate(usernames):
-                        if name == target:
-                            clients[i].send("KICKED".encode())
-                            clients[i].close()
-                            clients.pop(i)
-                            usernames.pop(i)
-                            broadcast(f"SYSTEM: {target} was kicked by admin {username}", None)
-                            update_user_list()
-                            break
+                    # Only admin can kick
+                    try:
+                        sender_index = clients.index(client_socket)
+                        if client_roles[sender_index] == "ADMIN":
+                            target = message.split(":", 1)[1]
+                            kicked = False
+                            for i, name in enumerate(usernames):
+                                if name == target:
+                                    # Send kick signal and close connection
+                                    try:
+                                        clients[i].send("KICKED".encode())
+                                        clients[i].close()
+                                    except:
+                                        pass
+                                    # Remove from lists
+                                    clients.pop(i)
+                                    usernames.pop(i)
+                                    client_roles.pop(i)
+                                    broadcast(f"SYSTEM: {target} was kicked by admin {username}", None)
+                                    update_user_list()
+                                    kicked = True
+                                    break
+                            if not kicked:
+                                client_socket.send(f"ERROR: User {target} not found".encode())
+                        else:
+                            client_socket.send("ERROR: Only admin can kick users".encode())
+                    except ValueError:
+                        pass
                 else:
                     broadcast(f"{username}: {message}", client_socket)
                     
@@ -121,6 +141,7 @@ def handle_client(client_socket):
             
             clients.append(client_socket)
             usernames.append(username)
+            client_roles.append("USER")
             
             client_socket.send("SUCCESS".encode())
             broadcast(f"SYSTEM: {username} joined the chat!", client_socket)
@@ -142,6 +163,9 @@ def handle_client(client_socket):
                                 clients[i].send(f"PRIVATE from {username}: {msg}".encode())
                                 client_socket.send(f"PRIVATE to {target}: {msg}".encode())
                                 break
+                elif message.startswith("KICK:"):
+                    # Users cannot kick
+                    client_socket.send("ERROR: Only admin can kick users".encode())
                 else:
                     broadcast(f"{username}: {message}", client_socket)
         else:
@@ -157,6 +181,7 @@ def handle_client(client_socket):
             name = usernames[index]
             clients.pop(index)
             usernames.pop(index)
+            client_roles.pop(index)
             broadcast(f"SYSTEM: {name} left the chat", None)
             update_user_list()
 
