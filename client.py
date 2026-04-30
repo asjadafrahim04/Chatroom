@@ -131,7 +131,6 @@ class ChatClient:
         if username:
             self.username = username
             self.socket.send(username.encode())
-            # Receive SUCCESS
             response = self.socket.recv(1024).decode()
             if response == "SUCCESS":
                 dialog.destroy()
@@ -205,15 +204,12 @@ class ChatClient:
         msg = self.msg_entry.get().strip()
         if msg:
             try:
-                # Send message to server
                 self.socket.send(msg.encode())
                 
-                # Display message locally 
                 from datetime import datetime
                 timestamp = datetime.now().strftime("%H:%M:%S")
                 self.add_message("YOU", msg)
                 
-                # Clear entry field
                 self.msg_entry.delete(0, tk.END)
             except Exception as e:
                 self.add_message("ERROR", f"Failed to send message: {e}")
@@ -227,7 +223,6 @@ class ChatClient:
                 if msg:
                     try:
                         self.socket.send(f"PRIVATE:{target}:{msg}".encode())
-                        # Display private message locally
                         from datetime import datetime
                         timestamp = datetime.now().strftime("%H:%M:%S")
                         self.add_message("YOU (PRIVATE to " + target + ")", msg)
@@ -305,7 +300,7 @@ class ChatClient:
                     elif msg.startswith("ERROR:"):
                         messagebox.showerror("Error", msg[6:])
                     else:
-                        # Regular chat message from others (format: "username: message")
+                        # Regular chat message from others
                         self.add_message("💬", msg)
                 except Exception as e:
                     print(f"Error receiving: {e}")

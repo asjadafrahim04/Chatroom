@@ -6,7 +6,7 @@ PORT = 12345
 
 clients = []
 usernames = []
-client_roles = []  # Track roles for each client
+client_roles = []  
 group_password = None
 admin_exists = False
 
@@ -80,7 +80,6 @@ def handle_client(client_socket):
                                 client_socket.send(f"PRIVATE to {target}: {msg}".encode())
                                 break
                 elif message.startswith("KICK:"):
-                    # Only admin can kick
                     try:
                         sender_index = clients.index(client_socket)
                         if client_roles[sender_index] == "ADMIN":
@@ -88,13 +87,11 @@ def handle_client(client_socket):
                             kicked = False
                             for i, name in enumerate(usernames):
                                 if name == target:
-                                    # Send kick signal and close connection
                                     try:
                                         clients[i].send("KICKED".encode())
                                         clients[i].close()
                                     except:
                                         pass
-                                    # Remove from lists
                                     clients.pop(i)
                                     usernames.pop(i)
                                     client_roles.pop(i)
@@ -164,7 +161,6 @@ def handle_client(client_socket):
                                 client_socket.send(f"PRIVATE to {target}: {msg}".encode())
                                 break
                 elif message.startswith("KICK:"):
-                    # Users cannot kick
                     client_socket.send("ERROR: Only admin can kick users".encode())
                 else:
                     broadcast(f"{username}: {message}", client_socket)
@@ -175,7 +171,6 @@ def handle_client(client_socket):
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        # Remove client on disconnect
         if client_socket in clients:
             index = clients.index(client_socket)
             name = usernames[index]
